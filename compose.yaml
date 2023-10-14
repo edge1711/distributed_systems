@@ -1,0 +1,27 @@
+services:
+  main:
+    image: python:3.9.18-slim
+    command: sh -c "pip install flask requests && python main.py"
+    ports:
+      - 0.0.0.0:5000:5000
+    working_dir: /app
+    volumes:
+      - ./:/app
+
+  secondary_one:
+    image: python:3.9.18-slim
+    command: sh -c "pip install flask && python secondary_one.py"
+    ports:
+      - 0.0.0.0:8001:8001
+    working_dir: /app
+    volumes:
+      - ./:/app
+
+  secondary_two:
+    image: python:3.9.18-slim
+    command: sh -c "pip install flask && python secondary_two.py"
+    ports:
+      - 0.0.0.0:8002:8002
+    working_dir: /app
+    volumes:
+      - ./:/app
