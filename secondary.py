@@ -1,10 +1,15 @@
-from flask import Flask, request, jsonify
+import os
 from time import sleep
-import logging
+
+from flask import Flask, request, jsonify
+
 
 app = Flask(__name__)
 
 messages_list = []
+
+HOST = os.getenv('HOST')
+PORT = os.getenv('PORT')
 
 
 @app.route("/get_messages")
@@ -16,17 +21,19 @@ def get_messages():
 def add_message():
     data = request.get_json()
     message = data.get('message')
-    acknowledge = {'acknowledge': True}
+    response = {
+        'acknowledge': True
+    }
 
     if message is None:
         return "No message was sent.", 400
 
     sleep(10)
     messages_list.append(message)
-    app.logger.debug(f'The message "{message}" has been received from {request.remote_addr} address')
+    app.logger.debug(f'The message "{message}" has been received from {request.remote_addr}')
 
-    return jsonify(acknowledge)
+    return jsonify(response)
 
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=8002)
+    app.run(debug=True, host=HOST, port=int(PORT))
