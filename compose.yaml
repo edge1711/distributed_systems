@@ -3,25 +3,42 @@ services:
     image: python:3.9.18-slim
     command: sh -c "pip install flask requests && python main.py"
     ports:
-      - 0.0.0.0:5000:5000
+      - "${MAIN_HOST}:${MAIN_PORT}:${MAIN_PORT}"
     working_dir: /app
     volumes:
       - ./:/app
+    env_file:
+      - ./config/.env
+    environment:
+      - SECONDARY_ONE_HOST=${SECONDARY_ONE_HOST_NETWORK}
+      - SECONDARY_TWO_HOST=${SECONDARY_TWO_HOST_NETWORK}
+      - SECONDARY_ONE_PORT=${SECONDARY_ONE_PORT}
+      - SECONDARY_TWO_PORT=${SECONDARY_TWO_PORT}
 
   secondary_one:
     image: python:3.9.18-slim
-    command: sh -c "pip install flask && python secondary_one.py"
+    command: sh -c "pip install flask && python secondary.py"
     ports:
-      - 0.0.0.0:8001:8001
+      - "${SECONDARY_ONE_HOST_LOCAL}:${SECONDARY_ONE_PORT}:${SECONDARY_ONE_PORT}"
     working_dir: /app
     volumes:
       - ./:/app
+    env_file:
+      - ./config/.env
+    environment:
+      - HOST=${SECONDARY_ONE_HOST_LOCAL}
+      - PORT=${SECONDARY_ONE_PORT}
 
   secondary_two:
     image: python:3.9.18-slim
-    command: sh -c "pip install flask && python secondary_two.py"
+    command: sh -c "pip install flask && python secondary.py"
     ports:
-      - 0.0.0.0:8002:8002
+      - "${SECONDARY_TWO_HOST_LOCAL}:${SECONDARY_TWO_PORT}:${SECONDARY_TWO_PORT}"
     working_dir: /app
     volumes:
       - ./:/app
+    env_file:
+      - ./config/.env
+    environment:
+      - HOST=${SECONDARY_TWO_HOST_LOCAL}
+      - PORT=${SECONDARY_TWO_PORT}

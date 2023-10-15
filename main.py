@@ -1,13 +1,21 @@
-from flask import Flask, request, jsonify
+import os
 import requests
-import logging
+import concurrent.futures
+from itertools import repeat
 
+from flask import Flask, request, jsonify
+
+
+SECONDARY_ONE_HOST = os.getenv('SECONDARY_ONE_HOST')
+SECONDARY_ONE_PORT = os.getenv('SECONDARY_ONE_PORT')
+
+SECONDARY_TWO_HOST = os.getenv('SECONDARY_TWO_HOST')
+SECONDARY_TWO_PORT = os.getenv('SECONDARY_TWO_PORT')
 
 SECONDARY_PATHS = [
-    'http://secondary_one:8001/add_message',
-    'http://secondary_two:8002/add_message'
+    f'{SECONDARY_ONE_HOST}:{SECONDARY_ONE_PORT}/add_message',
+    f'{SECONDARY_TWO_HOST}:{SECONDARY_TWO_PORT}/add_message'
 ]
-
 
 app = Flask(__name__)
 
@@ -23,15 +31,19 @@ def get_messages():
 def add_message():
     data = request.get_json()
     message = data.get('message')
+    thread_amount = len(SECONDARY_PATHS)
+
     if message is None:
         return "No message was sent.", 400
 
-    for s in SECONDARY_PATHS:
-        response = send_message_to_secondary(message, s)
-        if response.get('acknowledge') is True:
-            logging.info(f"The message '{message}' was sent successfully to the secondary {s}.")
-        else:
-            return f"The message '{message}' wasn't sent successfully to the secondary {s}.", 400
+    with concurrent.futures.ThreadPoolExecutor(max_workers=thread_amount) as executor:
+        results = executor.map(send_message_to_secondary, repeat(message), SECONDARY_PATHS)
+
+        for response in results:
+            if response[0].get('acknowledge') is True:
+                app.logger.debug(f"The message '{message}' was sent successfully to the secondary {response[1]}.")
+            else:
+                return f"The message '{message}' wasn't sent successfully to the secondary {response[1]}.", 400
 
     messages_list.append(message)
 
@@ -43,7 +55,7 @@ def send_message_to_secondary(message, path):
     r = requests.post(path, json=data)
     response = r.json()
 
-    return response
+    return response, path
 
 
 if __name__ == '__main__':
