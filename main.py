@@ -4,8 +4,8 @@ import logging
 
 
 SECONDARY_PATHS = [
-    'http://secondary_one:8001/add_message',
-    'http://secondary_two:8002/add_message'
+    'http://localhost:8001/add_message',
+    'http://localhost:8002/add_message'
 ]
 
 
@@ -29,7 +29,7 @@ def add_message():
     for s in SECONDARY_PATHS:
         response = send_message_to_secondary(message, s)
         if response.get('acknowledge') is True:
-            logging.info(f"The message '{message}' was sent successfully to the secondary {s}.")
+            app.logger.debug(f"The message '{message}' was sent successfully to the secondary {s}.")
         else:
             return f"The message '{message}' wasn't sent successfully to the secondary {s}.", 400
 

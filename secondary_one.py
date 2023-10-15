@@ -22,6 +22,7 @@ def add_message():
 
     sleep(10)
     messages_list.append(message)
+    app.logger.debug(f'The message "{message}" has been received from {request.remote_addr} address')
 
     return jsonify(acknowledge)
 
