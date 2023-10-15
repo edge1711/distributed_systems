@@ -4,8 +4,8 @@ import logging
 
 
 SECONDARY_PATHS = [
-    'http://localhost:8001/add_message',
-    'http://localhost:8002/add_message'
+    'http://secondary_one:8001/add_message',
+    'http://secondary_two:8002/add_message'
 ]
 
 
