@@ -34,7 +34,6 @@ def get_messages():
 @app.route("/add_message", methods=['POST'])
 def add_message():
     global message_order_index, messages_list
-    message_order_index += 1
 
     message = request.get_json()
     message['order'] = message_order_index
@@ -42,6 +41,7 @@ def add_message():
     message_text = message.get('message_text')
     if message_text is None:
         return "No message was sent.", 400
+    message_order_index += 1
 
     write_concern = message.pop('write_concern', 1) - 1
     thread_amount = len(SECONDARY_PATHS)
