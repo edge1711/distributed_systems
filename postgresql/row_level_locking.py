@@ -1,6 +1,6 @@
 import os
 import logging
-import concurrent.futures
+import threading
 import datetime
 
 import psycopg2
@@ -13,6 +13,7 @@ USER = 'admin'
 PASSWORD = os.getenv('PASSWORD')
 HOST = 'localhost'
 PORT = '5432'
+
 
 if __name__ == '__main__':
 
@@ -29,16 +30,23 @@ if __name__ == '__main__':
         create_table(cur, conn)
         truncate_table(cur, conn)
         insert_first_line(cur, conn)
+
+
+        start_datetime = datetime.datetime.now()
+
+        threads = []
+        for _ in range(10):
+            t = threading.Thread(target=increment_row_level_locking, args=(dsn,))
+            threads.append(t)
+            t.start()
+        for t in threads:
+            t.join()
+
+        end_datetime = datetime.datetime.now()
+        difference = end_datetime - start_datetime
+
+        logging.info(f"Duration of row level locking method - {difference.total_seconds()} seconds")
+
     finally:
         conn.close()
         cur.close()
-
-    start_datetime = datetime.datetime.now()
-
-    with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
-        [executor.submit(increment_row_level_locking, dsn) for _ in range(1, 10000)]
-
-    end_datetime = datetime.datetime.now()
-    difference = end_datetime - start_datetime
-
-    logging.info(f"Duration of row level locking method - {difference.total_seconds()} seconds")
