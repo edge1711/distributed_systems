@@ -1,6 +1,6 @@
 import os
 import logging
-import concurrent.futures
+import threading
 import datetime
 
 import psycopg2
@@ -20,8 +20,8 @@ if __name__ == '__main__':
         level=logging.INFO,
         format='%(asctime)s %(levelname)s %(message)s\n'
     )
-
-    conn = psycopg2.connect(f"dbname={DB_NAME} user={USER} password={PASSWORD} host={HOST} port={PORT}")
+    dsn = f"dbname={DB_NAME} user={USER} password={PASSWORD} host={HOST} port={PORT}"
+    conn = psycopg2.connect(dsn)
     cur = conn.cursor()
 
     try:
@@ -31,13 +31,19 @@ if __name__ == '__main__':
 
         start_datetime = datetime.datetime.now()
 
-        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
-            [executor.submit(increment_inplace_update, cur, conn) for _ in range(1, 10000)]
+        threads = []
+        for _ in range(10):
+            t = threading.Thread(target=increment_inplace_update, args=(dsn,))
+            threads.append(t)
+            t.start()
+        for t in threads:
+            t.join()
 
         end_datetime = datetime.datetime.now()
         difference = end_datetime - start_datetime
 
         logging.info(f"Duration of in-place update method - {difference.total_seconds()} seconds")
+
     finally:
         conn.close()
         cur.close()
